@@ -16,6 +16,14 @@ from terminal:
 >>> git push
 
 * you'll have to enter in username and password
+Then you should see something like:
+Counting objects: 4, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 698 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+To https://github.com/tdwilkinson/stellar-analysis.git
+   aa637df..acc4692  master -> master
 
 
 This should update what is online!
