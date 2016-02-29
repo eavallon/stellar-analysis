@@ -18,8 +18,13 @@ path =  "/home/tessa/Downloads/kepler.txt"
 def read_csv(path):
 
     """
+<<<<<<< HEAD
     Read Kepler dataset in path that is in csv format to get out data
     return: store as list of dictionaries where each dictionary is a star and its properties
+=======
+    Read Kepler dataset in path that is in .csv format to get out data
+    return: store in dictionary
+>>>>>>> 1d47de848be7d6a079be0735afbcd221abec51d1
     """
 
     out_dictionary = []
