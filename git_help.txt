@@ -1,0 +1,32 @@
+
+1)   set up git repository from local computer
+from terminal:
+
+>>> git clone 'https://github.com/tdwilkinson/stellar-analysis.git'
+
+2)   make sure local files are up-to-date with online files
+
+>>> git pull
+
+3)   after making edits to local file, add it to files to be pushed, add commit
+     comments, and push to online files
+
+>>> git add stellar_analysis.py
+>>> git commit -m 'added some stuffs'
+>>> git push
+
+* you'll have to enter in username and password
+Then you should see something like:
+Counting objects: 4, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 698 bytes | 0 bytes/s, done.
+Total 3 (delta 0), reused 0 (delta 0)
+To https://github.com/tdwilkinson/stellar-analysis.git
+   aa637df..acc4692  master -> master
+
+
+This should update what is online!
+Last thing is for:
+Tessa to keep her fork up to date with Ellis' by sending pull requests and
+Ellis to keep her version updated by accepting the pull requests. 
