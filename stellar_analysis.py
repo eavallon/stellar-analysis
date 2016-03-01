@@ -14,7 +14,7 @@ import math
 import pandas as pd
 import csv
 
-path =  "/home/tessa/Downloads/kepler.txt"
+path =  "kepler.txt"
 def read_csv(path):
 
     """
