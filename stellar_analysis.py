@@ -11,29 +11,21 @@ Research Questions:
 import numpy as np
 import matplotlib.pyplot
 import math
-import pandas as pd
 import csv
 
-path =  "/home/tessa/Downloads/kepler.txt"
-def read_csv(path):
+# This path will change based on where the data-set is located!
+path =  "kepler.txt"
 
+
+def read_csv(path):
     """
-<<<<<<< HEAD
-    Read Kepler dataset in path that is in csv format to get out data
+    Read Kepler data set in csv format in path to get out data
     return: store as list of dictionaries where each dictionary is a star and its properties
-=======
-    Read Kepler dataset in path that is in .csv format to get out data
-    return: store in dictionary
->>>>>>> 1d47de848be7d6a079be0735afbcd221abec51d1
     """
 
     out_dictionary = []
     for row in csv.DictReader(open(path)):
-        out_dictionary.append(row) # need to see data in to output stuffs
-
-    # alternate way:
-    # df = pd.DataFrame(path)
-    # name = df['column_name']
+        out_dictionary.append(row)
 
     return out_dictionary
 
