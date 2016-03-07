@@ -137,3 +137,11 @@ def histogram_stats(data):
 #  compare coordinates to color magnitude plot
 
 #
+def main():
+    
+    
+    
+if __name__ == "__main__":
+    main()
+    
+        
