@@ -9,7 +9,7 @@ Research Questions:
 
 """
 import numpy as np
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 import math
 import csv
 from astropy.coordinates import SkyCoord
@@ -19,6 +19,11 @@ import astropy.units as u
 # This path will change based on where the data-set is located!
 path =  "kepler_test50.txt"
 
+<<<<<<< HEAD
+=======
+path =  "kepler.txt"
+def read_csv(path):
+>>>>>>> b366870abb595eb6a79d2c9840bc12ece3ca29e9
 
 def read_csv(path):
     """
@@ -61,6 +66,7 @@ def get_column_data(path, column_name):
 
 # question 1
 # create color magnitude plot
+<<<<<<< HEAD
 """ grab 'E(B-V)' column (I think, otherwise B color and subtract V color) and 'KEP Mag' column
 color magnitude diagram: the x axis in this diagram is made from subtracting the colors (or temperatures) obtained by
 imaging stars with different filters (or color ranges). The blue-color range filter - the visual-color range filter (B-V)
@@ -77,8 +83,71 @@ life cycle. This is how we will tell which stars are which.
 # compare radii of stars to see if they are similar sizes
 """ grab 'Radius' column
 """
+=======
+def color_magnitude_plot(magnitude, temperature):
+    """
+    Given two lists Kepler Magnitude and the Temperature and saves it as a .png file.
+    
+    Parameters:
+        data: a dataframe consisting of the Kepler Magnitude and Temperature of 
+              various stars.
+              
+    Returns:
+        None
+    """
+    
+
+
+# question 2
+# compare radii of stars to see if they are similar sizes
+
+
+>>>>>>> b366870abb595eb6a79d2c9840bc12ece3ca29e9
 # histogram definition
 # histogram analysis
+
+def plot_planet_histogram(planet_data):
+    """
+    Given a dataframe, plots the data as a histogram, and saves it as a .png 
+    file. 
+    
+    Parameters:
+        data: a dataframe in which each element corresponds to the number of 
+              planets around a star.
+    
+    Returns:
+        None
+    """
+    n, bins, patches = plt.hist(planet_data, 50)
+    
+    plt.xlabel('Number of Planets')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of Planets')
+    plt.text()
+    plt.grid(True)
+    plt.show()
+    plt.savefig('planet-histogram', format = 'png')
+    
+
+def histogram_stats(data):
+    """
+    Given a dataframe, computes various statistics that will be used to analyze 
+    properties of that dataframe alongside the histogram plot.
+    
+    Parameters:
+        data: a dataframe
+    
+    Returns:
+        The sample size, mean, and standard deviation of the dataframe.
+    """
+    sample_size = len(data)
+    mean = mean(data)
+    standard_dev = np.std(data)
+    print 'Summary Statistics:'
+    print ' Sample Size:', sample_size
+    print ' Sample Mean:', mean
+    print 'Sample Standard Deviation:', standard_dev
+
 
 # question 3
 
@@ -147,3 +216,11 @@ get_coordinates()
 #  compare coordinates to color magnitude plot
 
 #
+def main():
+    
+    
+    
+if __name__ == "__main__":
+    main()
+    
+        
