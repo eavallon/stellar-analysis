@@ -216,3 +216,11 @@ get_coordinates()
 #  compare coordinates to color magnitude plot
 
 #
+def main():
+    
+    
+    
+if __name__ == "__main__":
+    main()
+    
+        
