@@ -164,12 +164,14 @@ def histogram_stats(data):
         The sample size, mean, and standard deviation of the dataframe.
     """
     sample_size = len(data)
-    mean = mean(data)
+    mean = np.mean(data)
     standard_dev = np.std(data)
     print 'Summary Statistics:'
     print ' Sample Size:', sample_size
     print ' Sample Mean:', mean
     print 'Sample Standard Deviation:', standard_dev
+
+    return standard_dev
 
 
 # question 3
@@ -215,7 +217,10 @@ def h_m_s_separator(coordinate):
 
 def check_if_coords_close(coord3d, other_coord3d, range):
     """
+    Checks if one star/coordinate is within some range of some other star/coordinate
     """
+
+    # TODO: refactor this!
     hour1 = coord3d[0]
     min1 = coord3d[1]
     sec1 = coord3d[2]
@@ -240,37 +245,116 @@ def find_surrounding_stars(kic, coord):
     output: list
     '''
 
-    # get_column_data()
-
-    ra_close = []
-    dec_close = []
-
+    close = []
     for k, c in get_coordinates().items():
-        if check_if_coords_close(coord[0], c[0], 3) and kic != k:
-            ra_close.append(k)
-        if check_if_coords_close(coord[1], c[1], 3) and kic != k:
-            dec_close.append(k)
+        if check_if_coords_close(coord[0], c[0], 10) and check_if_coords_close(coord[1], c[1], 10)  and kic != k:
+            close.append(int(k))
+
+    return close
+
+def percent_list_in_list(list1, list2):
+    """
+    list1 = list of kic numbers
+    list2 = list of kic numbers
+    output: the percentage of numbers in list1 that are also in list2
+    """
+
+    match_sum = 0
+    total = len(list2)
+    if len(list1) > 0 < len(list2):
+
+        for kic in list1:
+            for k in list2:
+                if kic == k:
+                    match_sum += 1
+
+        percentage =  float(match_sum) / float(total)
+
+        return percentage
+
+def near_stars_same_type_percentage(type_dict):
+    """
+    Checks to see if stars that are near each other are of the same type
+    input: type_list - list of kic numbers for each type of star
+    output: dictionary where the keys are kic numbers and the values are percentages saying how many
+            stars near it of the same type
+    """
+
+    out_percents_dict = {}
+    for k,v in get_coordinates().items():
+        near_stars_list = find_surrounding_stars(k, v)
+
+        for startype, starlist in type_dict.items():
+            if len(near_stars_list) > 0:
+                out_percents_dict[k] = percent_list_in_list(near_stars_list, starlist)
+
+    print out_percents_dict
+    return out_percents_dict
+
+def plot_near_stars_same_type_histogram(data, type_dict):
+    """
+    Given a dataframe, plots the data as a histogram, and saves it as a .png
+    file.
+
+    Parameters:
+        data: a dataframe in which each element corresponds to the number of
+              planets around a star.
+
+    Returns:
+        None
+    """
+    a = []
+    for n, (t,kics) in enumerate(type_dict.items()):
+        for k,p in data.items():
+            if int(k) in kics:
+                plt.scatter(n, p, marker = '*', linestyle = '-')
+                a.append(t)
 
 
-    print ra_close
-    print dec_close
+    plt.xticks(np.arange(len(a)), a)
+    plt.xlabel('Type of Stars')
+    plt.ylabel('Percentage ')
+    plt.title('Histogram: Near Stars of the Same Type')
+    # plt.text()
+    # plt.grid(True)
+    plt.show()
+    plt.savefig('near_stars_type_histogram', format = 'png')
 
-for k,v in get_coordinates().items():
-    print find_surrounding_stars(k, v)
-# compare coordinates definition
-# compare coordinates of range to type
-#  compare coordinates to color magnitude plot
 
+def classify_by_type(graph_content):
+    """
+    to get types
 
+    out: dictionary key= types and values = list of kic numbers of stars of that type
+    """
+    store = {}
+    # if 0 > graph_content > .60:
+    #     store['main_sequence'] = []
+    # elif graph_content < .40:
+    #     print 'young star'
+    # else:
+    #     print 'old star'
 
-# of coordinates by pulling in ra and dec columns from dataset
-# compare the coordinates (similar to blur homework)
-# what stars lie within a certain range of each other
-# compare types of stars within that range
-# check if in the same list for type
-# compare positions on the stellar magnitude diagram (first plot)
+    type_dict = {'main_sequence':[1026132, 893676, 893004, 893946], 'young stars': [757137, 893944, 1026146, 757450, 892911, 892977]}
+    return type_dict
+
+graph_content = 1
 #
 
+# of coordinates by pulling in ra and dec columns from dataset
+# compare the coordinates by range
+# what stars lie within a certain range of each other
+
+types = classify_by_type(graph_content)
+same_type_percentage_by_location = near_stars_same_type_percentage(types)
+# compare types of stars within that range
+#statistics of how many of the surrounding stars are the same type as one of these
+histogram_stats(same_type_percentage_by_location.values())
+
+# check if in the same list for type
+# compare positions on the stellar magnitude diagram (first plot)
+
+plot_near_stars_same_type_histogram(same_type_percentage_by_location, types )
 
 
 #
@@ -278,7 +362,7 @@ for k,v in get_coordinates().items():
 #
 #
 #
-# if __name__ == "__main__":
-#     main()
-#
+#     if __name__ == "__main__":
+#         main()
+
 
