@@ -55,7 +55,7 @@ def get_column_data(data, column_name):
             if "RA (J2000)" != key != "Dec (J2000)":
                 if len(parameter) > 0:
                     parameter = float(parameter)
-            if key == column_name and parameter != np.nan:
+            if key == column_name and len(str(parameter)) > 0 and parameter != np.nan:
                 out_dictionary[kicnumber] = parameter
 
     return out_dictionary
@@ -79,12 +79,11 @@ def get_coordinates(ra, dec):
     """
     coords_dictionary = {}
 
-    for k,v in ra.items():
+    for (k,v), (key,value) in zip(ra.items(), dec.items()):
         ra_coordlist = h_m_s_separator(v)
-        for key, value in dec.items():
-            dec_coordlist = h_m_s_separator(value)
-            if k == key:
-                coords_dictionary[k] = [ra_coordlist, dec_coordlist]
+        dec_coordlist = h_m_s_separator(value)
+        if k == key:
+            coords_dictionary[k] = [ra_coordlist, dec_coordlist]
 
     return coords_dictionary
 
@@ -106,8 +105,7 @@ def color_magnitude_plot(magnitude, temperature):
     Returns:
         None
     """
-    for key_m, value_m in magnitude.items():
-        for key_t, value_t in temperature.items():
+    for (key_m, value_m), (key_t, value_t) in zip(magnitude.items(), temperature.items()):
             if key_m == key_t:
                 try:
                     plt.scatter(value_t, value_m)
@@ -120,8 +118,8 @@ def color_magnitude_plot(magnitude, temperature):
     plt.xlabel('Temperature')
     plt.ylabel('Magnitude')
     plt.title('Color Magnitude Diagram')
-    plt.show()
-    #plt.savefig('color_magnitude', format = 'png')
+    #plt.show()
+    plt.savefig('color_magnitude', format = 'png')
     plt.clf()
     
     
@@ -149,8 +147,7 @@ def get_star_type(magnitude, temperature):
     giants = []
     white_dwarfs = []
 
-    for key_m, value_m in magnitude.items():
-        for key_t, value_t in temperature.items():
+    for (key_m, value_m), (key_t, value_t) in zip(magnitude.items(), temperature.items()):
             if key_m == key_t:
                 if 13 < value_m and value_t > 0.17:
                     pre_main_sequence.append(int(key_m))
@@ -203,7 +200,7 @@ def plot_histogram(data, x_label, data_title):
     plt.savefig(data_title, format = 'png')
     
 
-def histogram_stats(data, Name):
+def histogram_stats(data):
     """
     Given a dataset, computes various statistics that will be used to analyze 
     properties of the dataset alongside its histogram plot.
@@ -219,7 +216,7 @@ def histogram_stats(data, Name):
         mean = np.mean(data)
         standard_dev = np.std(data)
     
-        print '  ' + Name +  ' Statistics:'
+        print '  Summary Statistics:'
         print '\t' + 'Sample Size:', sample_size
         print '\t' + 'Sample Mean:', mean
         print '\t' + 'Sample Standard Deviation:', standard_dev
@@ -403,21 +400,24 @@ def proximity_type_histogram(data, type_dict):
 
     for index, values in y.items():
         average = sum(values) / len(y)
-        plt.bar(index, average, width = 0.5, align = 'center')
+        plt.bar(index, average, width = 1, align = 'center', )
         out.append(average)
 
     plt.xticks(np.arange(len(type_dict)), type_dict.keys())
     plt.xlabel('Type of Stars')
     plt.xlim(-1, len(type_dict.keys())+1)
-    plt.ylim(0, max(data.values()) +1)
+
     plt.ylabel('Percentage')
     plt.title('Histogram: Percentage of Proximity Stars by Type')
-    plt.show()
+    plt.autoscale(tight = False)
+    plt.ylim(0, 1.0)
+    #plt.show()
 
     for n, j in enumerate(type_dict.keys()):
             print '  ' + j, out[n]
 
-    #plt.savefig('near_stars_type_histogram', format = 'png')
+    plt.savefig('Proximity_Type_histogram', format = 'png')
+    plt.clf()
 
 
 def main(test = True):
@@ -437,17 +437,18 @@ def main(test = True):
     print "Question 1:"
     print "  Number of Stars per Type:"
     color_magnitude_plot(magnitude, temperature)
-    
+    types = get_star_type(magnitude, temperature)
+
     # Question 2
     print 'Question 2:'
-    types = get_star_type(magnitude, temperature)
-    histogram_stats(star_radii.values(), 'Star Radii')
+    print 'Stellar Radii per Type'
+    histogram_stats(star_radii.values())
 
     # Question 3
     print "Question 3:"
-    print "  Percentage of Stars in Close Proximity of the Same Type:"
+    print "  Type of Stars in Proximity by Type:"
     percentage = proximity_type_check(types, ra, dec)
-    histogram_stats(percentage.values(), 'Star Proximity by Type')
+    histogram_stats(percentage.values())
     proximity_type_histogram(percentage, types)
 
 
