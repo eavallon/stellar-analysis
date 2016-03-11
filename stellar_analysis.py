@@ -5,7 +5,7 @@ Authors: Ellis Avallone and Tessa Wilkinson
 Research Questions:
 1) Does gathering data from one section of the sky mean we get all the same type of star?
 2) Does gathering data from one section of the sky mean we get stars of the same size?
-3) Do two stars near each other in the sky mean they are located near each other in space?
+3) What type of stars are most likely to be near a star in our sky?
 
 """
 import numpy as np
@@ -32,7 +32,7 @@ def read_csv(path):
     return out_dictionary
 
 
-def get_column_data(path, column_name):
+def get_column_data(data, column_name):
     """
     Given a filename and a specific column name, returns every star in the 
     database with parameters in the specified column.
@@ -47,9 +47,9 @@ def get_column_data(path, column_name):
         A dictionary in which the key is the idea number of each star, and the
         values are the parameters in the column_name.
     """
-    array = read_csv(path)
+
     out_dictionary = {}
-    for star_dictionary in array:
+    for star_dictionary in data:
         for key, parameter in star_dictionary.items():
             kicnumber = star_dictionary['Kepler ID']
             if "RA (J2000)" != key != "Dec (J2000)":
@@ -176,7 +176,7 @@ def get_star_type(magnitude, temperature):
 
 # Question 2
 
-def plot_histogram(data, x_label, y_label, data_title, grid = True, show = True, savefig = True):
+def plot_histogram(data, x_label, data_title):
     """
     Given a dataset, plots the data as a histogram, and saves it as a .png 
     file. 
@@ -195,17 +195,15 @@ def plot_histogram(data, x_label, y_label, data_title, grid = True, show = True,
     n, bins, patches = plt.hist(data, 50, normed=1)
     
     plt.xlabel(x_label)
-    #plt.ylabel('Frequency')
-    plt.ylabel(y_label)
+    plt.ylabel('Frequency')
     plt.title(data_title)
     #plt.text()
-    plt.grid(grid)
-    plt.show(show)
-    if savefig:
-        plt.savefig(data_title, format = 'png')
+    plt.grid(True)
+    plt.show(True)
+    plt.savefig(data_title, format = 'png')
     
 
-def histogram_stats(data):
+def histogram_stats(data, Name):
     """
     Given a dataset, computes various statistics that will be used to analyze 
     properties of the dataset alongside its histogram plot.
@@ -216,16 +214,17 @@ def histogram_stats(data):
     Returns:
         The sample size, mean, and standard deviation of the dataset.
     """
-    sample_size = len(data)
-    mean = np.mean(data)
-    standard_dev = np.std(data)
+    if len(data) > 0 :
+        sample_size = len(data)
+        mean = np.mean(data)
+        standard_dev = np.std(data)
     
-    print 'Summary Statistics:'
-    print ' Sample Size:', sample_size
-    print ' Sample Mean:', mean
-    print ' Sample Standard Deviation:', standard_dev
+        print '  ' + Name +  ' Statistics:'
+        print '\t' + 'Sample Size:', sample_size
+        print '\t' + 'Sample Mean:', mean
+        print '\t' + 'Sample Standard Deviation:', standard_dev
 
-    return standard_dev
+        return standard_dev
 
 
 # Question 3
@@ -244,7 +243,6 @@ def h_m_s_separator(coordinate):
     hour = 0
     minute = 0
     sec = 0
-
     for index, value in enumerate(coordinate):
         # all kepler targets will be (+) declination: ignore '+' in first index
         if value[0] == '+':
@@ -291,7 +289,7 @@ def check_if_coords_close(coord1, coord2, coord_range):
 
     if hour1 == hour2 and min1 == min2:
         diff = np.abs(sec1 - sec2)
-        diff < coord_range
+        return diff < coord_range
 
 
 def find_surrounding_stars(kic, coord, ra, dec):
@@ -315,7 +313,7 @@ def find_surrounding_stars(kic, coord, ra, dec):
 
     close = []
     for k, c in get_coordinates(ra, dec).items():
-        if check_if_coords_close(coord[0], c[0], 10) and check_if_coords_close(coord[1], c[1], 10)  and kic != k:
+        if check_if_coords_close(coord[0], c[0], 30) and check_if_coords_close(coord[1], c[1], 30)  and kic != k:
             close.append(int(k))
 
     return close
@@ -391,33 +389,49 @@ def proximity_type_histogram(data, type_dict):
     Returns:
         None
     """
-    a = []
-    for n, (t,kics) in enumerate(type_dict.items()):
-        for k,p in data.items():
-            if int(k) in kics:
-                plt.scatter(n, p, marker = '*', linestyle = '-')
-                a.append(t)
+    y= {}
+    out = []
 
-    plt.xticks(np.arange(len(a)), a)
+    for k,percents in data.items():
+        for n, (t,kiclist) in enumerate(type_dict.items()):
+            if int(k) in kiclist:
+                if n not in y.keys():
+                    y[n] = percents
+                else:
+                    stack = np.hstack((n, percents))
+                    y[n] = stack
+
+    for index, values in y.items():
+        average = sum(values) / len(y)
+        plt.bar(index, average, width = 0.5, align = 'center')
+        out.append(average)
+
+    plt.xticks(np.arange(len(type_dict)), type_dict.keys())
     plt.xlabel('Type of Stars')
-    plt.ylabel('Percentage ')
-    plt.title('Histogram: Proximity Stars by Type')
+    plt.xlim(-1, len(type_dict.keys())+1)
+    plt.ylim(0, max(data.values()) +1)
+    plt.ylabel('Percentage')
+    plt.title('Histogram: Percentage of Proximity Stars by Type')
     plt.show()
+
+    for n, j in enumerate(type_dict.keys()):
+            print '  ' + j, out[n]
+
     #plt.savefig('near_stars_type_histogram', format = 'png')
 
 
-def main():
-    path =  "kepler_test50.txt"
-    #path = "kepler.txt"
-    
-    # call variables
-    magnitude = get_column_data(path, "KEP Mag")
-    temperature = get_column_data(path, "E(B-V)")
-    ra = get_column_data(path, 'RA (J2000)')
-    dec = get_column_data(path, 'Dec (J2000)')
-    star_radii = get_column_data(path, "Radius")
-    logg = get_column_data(path, 'Log G')
+def main(test = True):
 
+    path = "kepler_test50.txt" if test == True else "kepler.txt"
+
+    star_data = read_csv(path)
+
+    # call variables
+    magnitude = get_column_data(star_data, "KEP Mag")
+    temperature = get_column_data(star_data, "E(B-V)")
+    ra = get_column_data(star_data, 'RA (J2000)')
+    dec = get_column_data(star_data, 'Dec (J2000)')
+    star_radii = get_column_data(star_data, "Radius")
 
     # Question 1:
     print "Question 1:"
@@ -427,14 +441,13 @@ def main():
     # Question 2
     print 'Question 2:'
     types = get_star_type(magnitude, temperature)
-    histogram_stats(star_radii.values())
-    histogram_stats(logg.values())
+    histogram_stats(star_radii.values(), 'Star Radii')
 
     # Question 3
     print "Question 3:"
     print "  Percentage of Stars in Close Proximity of the Same Type:"
     percentage = proximity_type_check(types, ra, dec)
-    histogram_stats(percentage.values())
+    histogram_stats(percentage.values(), 'Star Proximity by Type')
     proximity_type_histogram(percentage, types)
 
 
