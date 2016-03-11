@@ -176,7 +176,7 @@ def get_star_type(magnitude, temperature):
 
 # Question 2
 
-def plot_histogram(data, x_label, data_title):
+def plot_histogram(data, x_label, y_label, data_title, grid = True, show = True, savefig = True):
     """
     Given a dataset, plots the data as a histogram, and saves it as a .png 
     file. 
@@ -195,12 +195,14 @@ def plot_histogram(data, x_label, data_title):
     n, bins, patches = plt.hist(data, 50, normed=1)
     
     plt.xlabel(x_label)
-    plt.ylabel('Frequency')
+    #plt.ylabel('Frequency')
+    plt.ylabel(y_label)
     plt.title(data_title)
-    plt.text()
-    plt.grid(True)
-    #plt.show()
-    #plt.savefig(data_title, format = 'png')
+    #plt.text()
+    plt.grid(grid)
+    plt.show(show)
+    if savefig:
+        plt.savefig(data_title, format = 'png')
     
 
 def histogram_stats(data):
@@ -244,25 +246,19 @@ def h_m_s_separator(coordinate):
     sec = 0
 
     for index, value in enumerate(coordinate):
-        # all kepler targets will be (+) declination so this can be omitted
+        # all kepler targets will be (+) declination: ignore '+' in first index
         if value[0] == '+':
             value = value[1:]
 
+        # obtain the hour, minute, and second values based on index
         if index < 3 and value != ' ':
-            if hour != 0:
-                hour = str(hour) + str(value)
-            else:
-                hour = value
+            hour = str(hour) + str(value) if hour != 0 else value
+
         elif 3 <= index <= 5 and value != ' ':
-            if minute != 0:
-                minute = str(minute) + str(value)
-            else:
-                minute = value
+            minute = str(minute) + str(value) if minute != 0 else value
+
         elif index > 5 and value != ' ':
-            if sec != 0:
-                sec = str(sec) + str(value)
-            else:
-                sec = value
+            sec = str(sec) + str(value) if sec != 0 else value
 
     try:
         return [int(hour), int(minute), float(sec)]
@@ -348,7 +344,7 @@ def percent_list_in_list(list1, list2):
         return percentage
 
 
-def near_stars_same_type_percentage(type_dict, ra, dec):
+def proximity_type_check(type_dict, ra, dec):
     """
     Given dictionary of star types, checks to see if stars that are near each
     other are of the same type
@@ -380,7 +376,7 @@ def near_stars_same_type_percentage(type_dict, ra, dec):
     return out_percents_dict
 
 
-def plot_near_stars_same_type_histogram(data, type_dict):
+def proximity_type_histogram(data, type_dict):
     """
     Given a dataset, plots the data as a histogram, and saves it as a .png
     file.
@@ -405,7 +401,7 @@ def plot_near_stars_same_type_histogram(data, type_dict):
     plt.xticks(np.arange(len(a)), a)
     plt.xlabel('Type of Stars')
     plt.ylabel('Percentage ')
-    plt.title('Histogram: Near Stars of the Same Type')
+    plt.title('Histogram: Proximity Stars by Type')
     plt.show()
     #plt.savefig('near_stars_type_histogram', format = 'png')
 
@@ -437,9 +433,9 @@ def main():
     # Question 3
     print "Question 3:"
     print "  Percentage of Stars in Close Proximity of the Same Type:"
-    percentage = near_stars_same_type_percentage(types, ra, dec)
-    #histogram_stats(percentage.values())
-    #plot_near_stars_same_type_histogram(percentage, types)
+    percentage = proximity_type_check(types, ra, dec)
+    histogram_stats(percentage.values())
+    proximity_type_histogram(percentage, types)
 
 
 if __name__ == "__main__":
