@@ -291,6 +291,7 @@ def near_stars_same_type_percentage(type_dict):
     print out_percents_dict
     return out_percents_dict
 
+
 def plot_near_stars_same_type_histogram(data, type_dict):
     """
     Given a dataframe, plots the data as a histogram, and saves it as a .png
@@ -327,19 +328,20 @@ def classify_by_type(graph_content):
 
     out: dictionary key= types and values = list of kic numbers of stars of that type
     """
-    store = {}
-    # if 0 > graph_content > .60:
-    #     store['main_sequence'] = []
-    # elif graph_content < .40:
-    #     print 'young star'
-    # else:
-    #     print 'old star'
+    type_dict = {}
+    if 0 > graph_content > .60:
+        store['main_sequence'] = []
+    elif graph_content < .40:
+        print 'young star'
+    else:
+        print 'old star'
 
     type_dict = {'main_sequence':[1026132, 893676, 893004, 893946], 'young stars': [757137, 893944, 1026146, 757450, 892911, 892977]}
     return type_dict
 
+# for now!
 graph_content = 1
-#
+
 
 # of coordinates by pulling in ra and dec columns from dataset
 # compare the coordinates by range
