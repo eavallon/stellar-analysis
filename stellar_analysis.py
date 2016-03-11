@@ -4,22 +4,27 @@ Authors: Ellis Avallone and Tessa Wilkinson
 
 Research Questions:
 1) Does gathering data from one section of the sky mean we get all the same type of star?
-2) What types of stars (of similar size) in this dataset have the most planets?
+2) Does gathering data from one section of the sky mean we get stars of the same size?
 3) Do two stars near each other in the sky mean they are located near each other in space?
 
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 import csv
-from astropy.coordinates import SkyCoord
-import astropy.units as u
 
 
+# Begin main program
 def read_csv(path):
     """
-    Read Kepler data set in csv format in path to get out data
-    return: store as list of dictionaries where each dictionary is a star and its properties
+    Reads in the Kepler data set and returns a dictionary
+
+    Parameters:
+        path: a filename
+
+    Returns:
+        A list of dictionaries in which the key is a string corresponding to a
+        column name in the .csv file, and the values are the properties associated
+        with that column.
     """
     out_dictionary = []
     for row in csv.DictReader(open(path)):
@@ -39,7 +44,7 @@ def get_column_data(path, column_name):
                      from.
     
     Returns: 
-        A dictionary in which the key is the kicnumber of each star and the 
+        A dictionary in which the key is the idea number of each star, and the
         values are the parameters in the column_name.
     """
     array = read_csv(path)
@@ -48,49 +53,30 @@ def get_column_data(path, column_name):
         for key, parameter in star_dictionary.items():
             kicnumber = star_dictionary['Kepler ID']
             if "RA (J2000)" != key != "Dec (J2000)":
-                parameter = float(parameter)
+                if len(parameter) > 0:
+                    parameter = float(parameter)
             if key == column_name and parameter != np.nan:
                 out_dictionary[kicnumber] = parameter
 
     return out_dictionary
 
-def dict_to_list(column_dict):
-    '''
-    A way to convert dicitonarys to lists
 
-    input: column_dictionary
-    output: list
-    '''
-
-
-    for key, values in column_dict.items():
-        return [key, values]
-
-def get_another_kic_value(kic, column_dict):
+def get_coordinates(ra, dec):
     """
-    We use a lot of dictionaries! So, this is a way to iterate through a dictionary looking for values
+    Given a coordinate, returns a dictionary mapping the stars's id to both its
+    coordinate
 
-    input: kic = kicnumber
-           column_dict = dictionary
-    output: float value
+    Parameters:
+        ra: a dictionary mapping a stars id to its Right Ascension (similar to
+        longitude)
+
+        dec: a dictionary mapping a stars id to its Declination (similar to
+        latitude)
+
+    Returns:
+        A dictionary in which the key is the star's id number and the value is an
+        array of coordinates.
     """
-
-
-    for k,value in column_dict.items():
-        if k == kic:
-            if 0 != value != np.nan:
-                return value
-
-def get_coordinates():
-    """
-    runs through the data file to get the coordinates for each star
-    output: a dictionary with key = kicnumber and value = array of ra and dec coordinates
-    """
-    path =  "kepler_test50.txt"
-
-    ra = get_column_data(path, 'RA (J2000)')
-    dec = get_column_data(path, 'Dec (J2000)')
-
     coords_dictionary = {}
 
     for k,v in ra.items():
@@ -102,6 +88,7 @@ def get_coordinates():
 
     return coords_dictionary
 
+
 # Question 1
 
 def color_magnitude_plot(magnitude, temperature):
@@ -110,17 +97,26 @@ def color_magnitude_plot(magnitude, temperature):
     plots them and saves the plot as a .png file.
     
     Parameters:
-        magnitude: a list of values corresponding to the Kepler magnitude of stars.
+        magnitude: a dictionary in which the keys are star id numbers and the
+        values correspond to the Kepler magnitude of stars.
             
-        temperature: a list of values corresponding to the color indicies of stars.
+        temperature: a dictionary in which the keys are the star id numbers, and the
+        values of values correspond to the E(B-V) of the star.
               
     Returns:
         None
     """
-    magnitude.reverse()
-    print len(magnitude)
-    print len(temperature)
-    plt.scatter(temperature, magnitude)
+    for key_m, value_m in magnitude.items():
+        for key_t, value_t in temperature.items():
+            if key_m == key_t:
+                try:
+                    plt.scatter(value_t, value_m)
+                except ValueError:
+                    if len(value_t) > 0 < len(value_m):
+                        plt.scatter(value_t, value_m)
+
+
+    plt.gca().invert_yaxis()
     plt.xlabel('Temperature')
     plt.ylabel('Magnitude')
     plt.title('Color Magnitude Diagram')
@@ -131,41 +127,52 @@ def color_magnitude_plot(magnitude, temperature):
     
 def get_star_type(magnitude, temperature):
     """
-    Given two lists corresponding to the Kepler Magnitude and the Temperature, 
-    and coordinate restrictions corresponding to the desired type of star, 
-    returns a dictionary that includes only those stars.
+    Given two dictionaries in which the keys are star id numbers, and the values
+    are either the Kepler Magnitude or the Temperature, returns a dictionary of star
+    types.
     
     Parameters:
-        magnitude: a list of values corresponding to the Kepler magnitude of stars.
-            
-        temperature: a list of values corresponding to the color indicies of stars.
-        
-     Returns:
-         Four lists of kicnumbers corresponding to stars of type main sequence, 
-         pre-main sequence, giant, and white dwarf. Also prints the amount of
-         each type of star in our dataset.
-    """
 
+        magnitude: a dictionary in which the keys are star id numbers and the
+        values correspond to the Kepler magnitude of stars.
+
+        temperature: a dictionary in which the keys are the star id numbers, and the
+        values of values correspond to the E(B-V) of the star.
+
+     Returns:
+         A dictionary in which the keys are strings of types of stars, and the
+         values are lists of star id numbers.
+    """
+    type_dict = {}
     main_sequence = []
     pre_main_sequence = []
     giants = []
     white_dwarfs = []
 
-    type_dict = {}
-    # if 0 > graph_content > .60:
-    #     store['main_sequence'] = []
-    # elif graph_content < .40:
-    #     print 'young star'
-    # else:
-    #     print 'old star'
+    for key_m, value_m in magnitude.items():
+        for key_t, value_t in temperature.items():
+            if key_m == key_t:
+                if 13 < value_m and value_t > 0.17:
+                    pre_main_sequence.append(int(key_m))
+                elif 12 > value_m:
+                    giants.append(int(key_m))
+                elif 15 < value_m and value_t < 0.75:
+                    white_dwarfs.append(int(key_m))
+                else:
+                    main_sequence.append(int(key_m))
 
-    type_dict = {'main_sequence':[1026132, 893676, 893004, 893946], 'young stars': [757137, 893944, 1026146, 757450, 892911, 892977]}
+    type_dict['Main Sequence'] = main_sequence
+    type_dict['Pre-Main Sequence'] = pre_main_sequence
+    type_dict['Giants'] =  giants
+    type_dict['White Dwarfs'] = white_dwarfs
 
-    print "Number of Main Sequence Stars:", len(main_sequence)
-    print "Number of Pre Main Sequence Stars:", len(pre_main_sequence)
-    print "Number of Giant Stars:", len(giants)
-    print "Number of While Dwarf Stars:", len(white_dwarfs)
+    print "  Number of Main Sequence Stars:", len(main_sequence)
+    print "  Number of Pre Main Sequence Stars:", len(pre_main_sequence)
+    print "  Number of Giant Stars:", len(giants)
+    print "  Number of White Dwarf Stars:", len(white_dwarfs)
+
     return type_dict
+
 
 # Question 2
 
@@ -223,15 +230,21 @@ def histogram_stats(data):
 
 def h_m_s_separator(coordinate):
     """
-    Given the coordiates of a star as a string '## ## ##.###' covert to a list of values
-    output: list of hour, min, sec values [##, ##, ##.##]
+    Converts a coordinate of a star to a list of values.
+
+    Parameters:
+        coordinate: a string corresponding to a stars location in
+        'hours, minutes, second' format
+
+    Returns:
+        A list of values corresponding to the hour, minute, and second.
     """
     hour = 0
     minute = 0
     sec = 0
 
     for index, value in enumerate(coordinate):
-        # all kepler targets will be (+) so this can be omitted
+        # all kepler targets will be (+) declination so this can be omitted
         if value[0] == '+':
             value = value[1:]
 
@@ -257,40 +270,55 @@ def h_m_s_separator(coordinate):
         return [0, 0, 0]
 
 
-def check_if_coords_close(coord3d, other_coord3d, coord_range):
+def check_if_coords_close(coord1, coord2, coord_range):
     """
-    calls the coordinates
+    Checks if the first star/coordinate given is within range of the second
+    star/coordinate.
 
-    Checks if one star/coordinate is within some range of some other star/coordinate
+    Parameters:
+        coord1: a list that represents one coordinate of a star
+
+        coord2: a list that represents a coordinate of another star
+
+        coord_range: an integer value corresponding to a range around coord1
+
+    Returns:
+        A boolean Value
     """
+    hour1 = coord1[0]
+    min1 =  coord1[1]
+    sec1 = coord1[2]
 
-    # TODO: refactor this!
-    hour1 = coord3d[0]
-    min1 = coord3d[1]
-    sec1 = coord3d[2]
-
-    hour2 = other_coord3d[0]
-    min2 = other_coord3d[1]
-    sec2 = other_coord3d[2]
+    hour2 = coord2[0]
+    min2 = coord2[1]
+    sec2 = coord2[2]
 
     if hour1 == hour2 and min1 == min2:
         diff = np.abs(sec1 - sec2)
-        if diff < coord_range:
-            return True
-        else:
-            return False
+        diff < coord_range
 
 
-def find_surrounding_stars(kic, coord):
-    '''
-    Returns a list of stars that are close to the star presented
+def find_surrounding_stars(kic, coord, ra, dec):
+    """
+    Given a star's id and it's coordinates, returns a list of stars that
+    are close to the given star.
 
-    input: kic star, coordinate of the kic star
-    output: list
-    '''
+    Parameters:
+        kic: an integer value representing the star's id number star
+
+        coord: a list corresponding to the star's location
+
+        ra: a dictionary mapping a stars id to its Right Ascension (similar to
+            longitude).
+
+        dec: a dictionary mapping a stars id to its Declination (similar to
+            latitude).
+
+    Returns: a list of star id numbers
+    """
 
     close = []
-    for k, c in get_coordinates().items():
+    for k, c in get_coordinates(ra, dec).items():
         if check_if_coords_close(coord[0], c[0], 10) and check_if_coords_close(coord[1], c[1], 10)  and kic != k:
             close.append(int(k))
 
@@ -299,36 +327,52 @@ def find_surrounding_stars(kic, coord):
 
 def percent_list_in_list(list1, list2):
     """
-    list1 = list of kic numbers
-    list2 = list of kic numbers
-    output: the percentage of numbers in list1 that are also in list2
+    Given two lists, returns the percentage of the values that are in both lists
+
+    Parameters:
+
+        list1 = A list of star id numbers
+
+        list2 = A list of star id numbers
+
+    Returns:
+        The float representing the percentage of values in both lists
     """
-
-    match_sum = 0
     total = len(list2)
+
     if len(list1) > 0 < len(list2):
-
-        for kic in list1:
-            for k in list2:
-                if kic == k:
-                    match_sum += 1
-
-        percentage =  float(match_sum) / float(total)
-
+        set1 = set(list1)
+        set2 = set(list2)
+        out = list(set1 & set2)
+        percentage =  float(len(out)) / float(total)
         return percentage
 
 
-def near_stars_same_type_percentage(type_dict):
+def near_stars_same_type_percentage(type_dict, ra, dec):
     """
-    Checks to see if stars that are near each other are of the same type
-    input: type_list - list of kic numbers for each type of star
-    output: dictionary where the keys are kic numbers and the values are percentages saying how many
-            stars near it of the same type
-    """
+    Given dictionary of star types, checks to see if stars that are near each
+    other are of the same type
 
+    Parameters:
+
+        type_dict: dictionary in which the keys are strings corresponding to
+                   the types of stars, and the values are lists of star id numbers.
+
+        ra: a dictionary mapping a stars id to its Right Ascension (similar to
+            longitude).
+
+        dec: a dictionary mapping a stars id to its Declination (similar to
+            latitude).
+
+    Returns:
+        A dictionary in which the keys are star id numbers, and the values are
+        floats representing percentage of same type stars in the surrounding
+        area.
+        """
     out_percents_dict = {}
-    for k,v in get_coordinates().items():
-        near_stars_list = find_surrounding_stars(k, v)
+
+    for k,v in get_coordinates(ra, dec).items():
+        near_stars_list = find_surrounding_stars(k, v, ra, dec)
         for startype, starlist in type_dict.items():
             if len(near_stars_list) > 0:
                 out_percents_dict[k] = percent_list_in_list(near_stars_list, starlist)
@@ -338,12 +382,15 @@ def near_stars_same_type_percentage(type_dict):
 
 def plot_near_stars_same_type_histogram(data, type_dict):
     """
-    Given a dataframe, plots the data as a histogram, and saves it as a .png
+    Given a dataset, plots the data as a histogram, and saves it as a .png
     file.
 
     Parameters:
-        data: a dataframe in which each element corresponds to the number of
-              planets around a star.
+        data: a dictionary in which they keys are star id numbers, and the values
+              are percentages
+
+        type_dict: dictionary in which the keys are strings corresponding to
+                the types of stars, and the values are lists of star id numbers.
 
     Returns:
         None
@@ -359,7 +406,7 @@ def plot_near_stars_same_type_histogram(data, type_dict):
     plt.xlabel('Type of Stars')
     plt.ylabel('Percentage ')
     plt.title('Histogram: Near Stars of the Same Type')
-    #plt.show()
+    plt.show()
     #plt.savefig('near_stars_type_histogram', format = 'png')
 
 
@@ -367,31 +414,32 @@ def main():
     path =  "kepler_test50.txt"
     #path = "kepler.txt"
     
+    # call variables
+    magnitude = get_column_data(path, "KEP Mag")
+    temperature = get_column_data(path, "E(B-V)")
+    ra = get_column_data(path, 'RA (J2000)')
+    dec = get_column_data(path, 'Dec (J2000)')
+    star_radii = get_column_data(path, "Radius")
+    logg = get_column_data(path, 'Log G')
+
+
     # Question 1:
-    # column name "KEP Mag" isn't in main data file, but is in test file
-    magnitude = get_column_data(path, "KEP Mag").values()
-    temperature = get_column_data(path, "E(B-V)").values()
-    
+    print "Question 1:"
+    print "  Number of Stars per Type:"
     color_magnitude_plot(magnitude, temperature)
     
     # Question 2
-    star_radii = get_column_data(path, "Radius")
+    print 'Question 2:'
+    types = get_star_type(magnitude, temperature)
     histogram_stats(star_radii.values())
-    
+    histogram_stats(logg.values())
 
     # Question 3
-
-    types = get_star_type(magnitude, temperature)
-
-    same_type_percentage_by_location = near_stars_same_type_percentage(types)
-    # compare types of stars within that range
-    #statistics of how many of the surrounding stars are the same type as one of these
-    histogram_stats(same_type_percentage_by_location.values())
-
-    # check if in the same list for type
-    # compare positions on the stellar magnitude diagram (first plot)
-
-    plot_near_stars_same_type_histogram(same_type_percentage_by_location, types )
+    print "Question 3:"
+    print "  Percentage of Stars in Close Proximity of the Same Type:"
+    percentage = near_stars_same_type_percentage(types, ra, dec)
+    #histogram_stats(percentage.values())
+    #plot_near_stars_same_type_histogram(percentage, types)
 
 
 if __name__ == "__main__":
