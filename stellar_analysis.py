@@ -14,16 +14,12 @@ import math
 import csv
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+import pandas as pd
 
-
-# This path will change based on where the data-set is located!
 path =  "kepler_test50.txt"
 
-<<<<<<< HEAD
-=======
-path =  "kepler.txt"
-def read_csv(path):
->>>>>>> b366870abb595eb6a79d2c9840bc12ece3ca29e9
+# This path will change based on where the data-set is located!
+#path =  "kepler.txt"
 
 def read_csv(path):
     """
@@ -40,8 +36,18 @@ def read_csv(path):
 
 def get_column_data(path, column_name):
     """
-    Given a specific column name: return every star in database with parameters in specified column
-    returns: a dictionary: the key is the kicnumber of each star and the values are the parameters in the column_name
+    Given a filename and a specific column name, returns every star in the 
+    database with parameters in the specified column.
+    
+    Parameters:
+        path: a filename corresponding to a csv file.
+        
+        column_name: a string corresponding to the column we wish to pull data 
+                     from.
+    
+    Returns: 
+        A dictionary in which the key is the kicnumber of each star and the 
+        values are the parameters in the column_name.
     """
 
     array = read_csv(path)
@@ -50,7 +56,9 @@ def get_column_data(path, column_name):
     for star_dictionary in array:
         for key,parameter in star_dictionary.items():
             kicnumber = star_dictionary['Kepler ID']
-            if key == column_name and len(parameter) > 0:
+            if "RA (J2000)" != key != "Dec (J2000)":
+                parameter = float(parameter)
+            if key == column_name and parameter != np.nan:
                 out_dictionary[kicnumber] = parameter
 
     # as a check!
@@ -66,7 +74,6 @@ def get_column_data(path, column_name):
 
 # question 1
 # create color magnitude plot
-<<<<<<< HEAD
 """ grab 'E(B-V)' column (I think, otherwise B color and subtract V color) and 'KEP Mag' column
 color magnitude diagram: the x axis in this diagram is made from subtracting the colors (or temperatures) obtained by
 imaging stars with different filters (or color ranges). The blue-color range filter - the visual-color range filter (B-V)
@@ -79,74 +86,113 @@ connecting these will indicate the 'main sequence' of stars, or the stars that a
 life cycle. This is how we will tell which stars are which.
 """
 
-# question 2
-# compare radii of stars to see if they are similar sizes
-""" grab 'Radius' column
-"""
-=======
 def color_magnitude_plot(magnitude, temperature):
     """
-    Given two lists Kepler Magnitude and the Temperature and saves it as a .png file.
+    Given two lists corresponding to the Kepler Magnitude and the Temperature,
+    plots them and saves the plot as a .png file.
     
     Parameters:
-        data: a dataframe consisting of the Kepler Magnitude and Temperature of 
-              various stars.
+        magnitude: a list of values corresponding to the Kepler magnitude of stars.
+            
+        temperature: a list of values corresponding to the color indicies of stars.
               
     Returns:
         None
     """
     
+    #make parameters the dictionaries
+    #iterate through parameters, and make sure keys are the same
+    
+    magnitude.reverse()
+    print len(magnitude)
+    print len(temperature)
+    plt.scatter(temperature, magnitude)
+    plt.xlabel('Temperature')
+    plt.ylabel('Magnitude')
+    plt.title('Color Magnitude Diagram')
+    plt.show()
+    #plt.savefig('color_magnitude', format = 'png')
+    plt.clf()
+    
+    
+def get_star_type(magnitude, temperature):
+    """
+    Given two lists corresponding to the Kepler Magnitude and the Temperature, 
+    and coordinate restrictions corresponding to the desired type of star, 
+    returns a dictionary that includes only those stars.
+    
+    Parameters:
+        magnitude: a list of values corresponding to the Kepler magnitude of stars.
+            
+        temperature: a list of values corresponding to the color indicies of stars.
+        
+     Returns:
+         Four lists of kicnumbers corresponding to stars of type main sequence, 
+         pre-main sequence, giant, and white dwarf. Also prints the amount of
+         each type of star in our dataset.
+    """
+    main_sequence = []
+    pre_main_sequence = []
+    giants = []
+    white_dwarfs = []
+    
+    print "Number of Main Sequence Stars:", len(main_sequence)
+    print "Number of Pre Main Sequence Stars:", len(pre_main_sequence)
+    print "Number of Giant Stars:", len(giants)
+    print "Number of While Dwarf Stars:", len(white_dwarfs)
 
 
 # question 2
 # compare radii of stars to see if they are similar sizes
-
-
->>>>>>> b366870abb595eb6a79d2c9840bc12ece3ca29e9
 # histogram definition
 # histogram analysis
 
-def plot_planet_histogram(planet_data):
+def plot_histogram(data, x_label, data_title):
     """
-    Given a dataframe, plots the data as a histogram, and saves it as a .png 
+    Given a dataset, plots the data as a histogram, and saves it as a .png 
     file. 
     
     Parameters:
-        data: a dataframe in which each element corresponds to the number of 
-              planets around a star.
+        data: a dataset corresponding to a property of a star.
+        
+        x_label: a string corresponding to the label on the histogram's x-axis.
+        
+        data_title: a string corresponding to the title of the histogram and the 
+                    name the histogram will be saved as.
     
     Returns:
         None
     """
-    n, bins, patches = plt.hist(planet_data, 50)
+    n, bins, patches = plt.hist(data, 50, normed=1)
     
-    plt.xlabel('Number of Planets')
+    plt.xlabel(x_label)
     plt.ylabel('Frequency')
-    plt.title('Histogram of Planets')
+    plt.title(data_title)
     plt.text()
     plt.grid(True)
-    plt.show()
-    plt.savefig('planet-histogram', format = 'png')
+    #plt.show()
+    #plt.savefig(data_title, format = 'png')
     
 
 def histogram_stats(data):
     """
-    Given a dataframe, computes various statistics that will be used to analyze 
-    properties of that dataframe alongside the histogram plot.
+    Given a dataset, computes various statistics that will be used to analyze 
+    properties of the dataset alongside its histogram plot.
     
     Parameters:
-        data: a dataframe
+        data: a dataset
     
     Returns:
-        The sample size, mean, and standard deviation of the dataframe.
+        The sample size, mean, and standard deviation of the dataset.
     """
     sample_size = len(data)
-    mean = mean(data)
+    mean = np.mean(data)
     standard_dev = np.std(data)
+    
     print 'Summary Statistics:'
     print ' Sample Size:', sample_size
     print ' Sample Mean:', mean
-    print 'Sample Standard Deviation:', standard_dev
+    print ' Sample Standard Deviation:', standard_dev
 
 
 # question 3
@@ -189,7 +235,7 @@ def h_m_s_separator(coordinate):
 
 def get_coordinates():
     """
-    calls the coordinages
+    calls the coordinates
     """
 
     ra = get_column_data(path, 'RA (J2000)')
@@ -208,16 +254,28 @@ def get_coordinates():
 
 
 
-get_coordinates()
+#get_coordinates()
 
 
 # compare coordinates definition
 # compare coordinates of range to type
 #  compare coordinates to color magnitude plot
 
-#
+
 def main():
+    path =  "kepler_test50.txt"
+    #path = "kepler.txt"
     
+    # Question 1:
+    # column name "KEP Mag" isn't in main data file, but is in test file
+    magnitude = get_column_data(path, "KEP Mag").values()
+    temperature = get_column_data(path, "E(B-V)").values()
+    
+    color_magnitude_plot(magnitude, temperature)
+    
+    # Question 2
+    star_radii = get_column_data(path, "Radius")
+    histogram_stats(star_radii.values())
     
     
 if __name__ == "__main__":
