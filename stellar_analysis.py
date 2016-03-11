@@ -42,7 +42,6 @@ def get_column_data(path, column_name):
         A dictionary in which the key is the kicnumber of each star and the 
         values are the parameters in the column_name.
     """
-
     array = read_csv(path)
     out_dictionary = {}
     for star_dictionary in array:
@@ -82,13 +81,13 @@ def get_another_kic_value(kic, column_dict):
                 return value
 
 
-
 def get_coordinates():
     """
     runs through the data file to get the coordinates for each star
     output: a dictionary with key = kicnumber and value = array of ra and dec coordinates
     """
-
+    path = "kepler_test50.txt"
+    
     ra = get_column_data(path, 'RA (J2000)')
     dec = get_column_data(path, 'Dec (J2000)')
 
@@ -104,19 +103,6 @@ def get_coordinates():
     return coords_dictionary
 
 # Question 1
-# create color magnitude plot
-
-""" grab 'E(B-V)' column (I think, otherwise B color and subtract V color) and 'KEP Mag' column
-color magnitude diagram: the x axis in this diagram is made from subtracting the colors (or temperatures) obtained by
-imaging stars with different filters (or color ranges). The blue-color range filter - the visual-color range filter (B-V)
-gives a color index in terms of the visual wavelengths that we can observe. This value ranges from 0 to 2 depending on
-how red the star is. The y axis is in terms of absolute magnitude (or how bright the star truly is, not just how bright
-we see it as), and is inverted on this graph so that as you go to great y values, the absolute magnitude gets smaller in
-number. This is because absolute magnitude is one of those historically backwards in scale. (darn conventions!)
-The final plot will have hotter, bluer stars towards the top left, and cooler, older stars on the bottom right. A line
-connecting these will indicate the 'main sequence' of stars, or the stars that are burning hydrogen as part of the main
-life cycle. This is how we will tell which stars are which.
-"""
 
 def color_magnitude_plot(magnitude, temperature):
     """
@@ -131,10 +117,6 @@ def color_magnitude_plot(magnitude, temperature):
     Returns:
         None
     """
-    
-    #make parameters the dictionaries
-    #iterate through parameters, and make sure keys are the same
-    
     magnitude.reverse()
     print len(magnitude)
     print len(temperature)
@@ -143,7 +125,7 @@ def color_magnitude_plot(magnitude, temperature):
     plt.ylabel('Magnitude')
     plt.title('Color Magnitude Diagram')
     plt.show()
-    plt.savefig('color_magnitude', format = 'png')
+    #plt.savefig('color_magnitude', format = 'png')
     plt.clf()
     
     
@@ -177,21 +159,15 @@ def get_star_type(magnitude, temperature):
         print 'old star'
 
     type_dict = {'main_sequence':[1026132, 893676, 893004, 893946], 'young stars': [757137, 893944, 1026146, 757450, 892911, 892977]}
-    return type_dict
     
     print "Number of Main Sequence Stars:", len(main_sequence)
     print "Number of Pre Main Sequence Stars:", len(pre_main_sequence)
     print "Number of Giant Stars:", len(giants)
     print "Number of While Dwarf Stars:", len(white_dwarfs)
+    return type_dict
 
 
-# question 2
-# compare radii of stars to see if they are similar sizes
-""" grab 'Radius' column
-"""
-
-# histogram definition
-# histogram analysis
+# Question 2
 
 def plot_histogram(data, x_label, data_title):
     """
@@ -243,7 +219,7 @@ def histogram_stats(data):
     return standard_dev
 
 
-# question 3
+# Question 3
 
 def h_m_s_separator(coordinate):
     """
@@ -253,7 +229,6 @@ def h_m_s_separator(coordinate):
     hour = 0
     minute = 0
     sec = 0
-    #print 'in hms_sep, coord:', coordinate
 
     for index, value in enumerate(coordinate):
         # all kepler targets will be (+) so this can be omitted
@@ -282,10 +257,10 @@ def h_m_s_separator(coordinate):
         return [0, 0, 0]
 
 
-def check_if_coords_close(coord3d, other_coord3d, range):
+def check_if_coords_close(coord3d, other_coord3d, coord_range):
     """
     calls the coordinates
-
+    
     Checks if one star/coordinate is within some range of some other star/coordinate
     """
 
@@ -300,7 +275,7 @@ def check_if_coords_close(coord3d, other_coord3d, range):
 
     if hour1 == hour2 and min1 == min2:
         diff = np.abs(sec1 - sec2)
-        if diff < range:
+        if diff < coord_range:
             return True
         else:
             return False
@@ -320,6 +295,7 @@ def find_surrounding_stars(kic, coord):
             close.append(int(k))
 
     return close
+
 
 def percent_list_in_list(list1, list2):
     """
@@ -341,6 +317,7 @@ def percent_list_in_list(list1, list2):
 
         return percentage
 
+
 def near_stars_same_type_percentage(type_dict):
     """
     Checks to see if stars that are near each other are of the same type
@@ -352,12 +329,10 @@ def near_stars_same_type_percentage(type_dict):
     out_percents_dict = {}
     for k,v in get_coordinates().items():
         near_stars_list = find_surrounding_stars(k, v)
-#get_coordinates()
         for startype, starlist in type_dict.items():
             if len(near_stars_list) > 0:
                 out_percents_dict[k] = percent_list_in_list(near_stars_list, starlist)
 
-    print out_percents_dict
     return out_percents_dict
 
 
@@ -380,19 +355,12 @@ def plot_near_stars_same_type_histogram(data, type_dict):
                 plt.scatter(n, p, marker = '*', linestyle = '-')
                 a.append(t)
 
-
     plt.xticks(np.arange(len(a)), a)
     plt.xlabel('Type of Stars')
     plt.ylabel('Percentage ')
     plt.title('Histogram: Near Stars of the Same Type')
-    # plt.text()
-    # plt.grid(True)
-    plt.show()
-    plt.savefig('near_stars_type_histogram', format = 'png')
-
-
-# for now!
-graph_content = 1
+    #plt.show()
+    #plt.savefig('near_stars_type_histogram', format = 'png')
 
 
 def main():
