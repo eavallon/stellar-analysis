@@ -4,16 +4,13 @@ Authors: Ellis Avallone and Tessa Wilkinson
 
 Research Questions:
 1) Does gathering data from one section of the sky mean we get all the same type of star?
-2) Does gathering data from one section of the sky mean we get stars of the same size?
+2) Are stars of the same type typically the same size?
 3) What type of stars are most likely to be near a star in our sky?
-
 """
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
 
-
-# Begin main program
 def read_csv(path):
     """
     Reads in the Kepler data set and returns a dictionary
@@ -27,8 +24,12 @@ def read_csv(path):
         with that column.
     """
     out_dictionary = []
-    for row in csv.DictReader(open(path)):
+    path_data = csv.DictReader(open(path))
+    
+    # Creates a dictionary from filename
+    for row in path_data:
         out_dictionary.append(row)
+    path_data.close()
     return out_dictionary
 
 
@@ -49,15 +50,18 @@ def get_column_data(data, column_name):
     """
 
     out_dictionary = {}
+    
+    # Iterating through each dictionary corresponding to 1 row in the file
     for star_dictionary in data:
         for key, parameter in star_dictionary.items():
-            kicnumber = star_dictionary['Kepler ID']
+            star_id = star_dictionary['Kepler ID']
+            # Excludes rows whose values aren't floats
             if "RA (J2000)" != key != "Dec (J2000)":
                 if len(parameter) > 0:
                     parameter = float(parameter)
-            if key == column_name and len(str(parameter)) > 0 and parameter != np.nan:
-                out_dictionary[kicnumber] = parameter
-
+            # Add to final output dictionary
+            if key == column_name and len(str(parameter)) > 0 and parameter != np.nan and type(parameter) != None:
+                out_dictionary[star_id] = parameter
     return out_dictionary
 
 
@@ -78,18 +82,17 @@ def get_coordinates(ra, dec):
         array of coordinates.
     """
     coords_dictionary = {}
-
+    
+    # Iterate through each coordinate
     for (k,v), (key,value) in zip(ra.items(), dec.items()):
         ra_coordlist = h_m_s_separator(v)
         dec_coordlist = h_m_s_separator(value)
         if k == key:
             coords_dictionary[k] = [ra_coordlist, dec_coordlist]
-
     return coords_dictionary
 
 
-# Question 1
-
+# Question 1:
 def color_magnitude_plot(magnitude, temperature):
     """
     Given two lists corresponding to the Kepler Magnitude and the Temperature,
@@ -105,14 +108,17 @@ def color_magnitude_plot(magnitude, temperature):
     Returns:
         None
     """
-    for (key_m, value_m), (key_t, value_t) in zip(magnitude.items(), temperature.items()):
+    # Iterate through each magnitude element and temperature element
+    for key_m, value_m in magnitude.items(): 
+        for key_t, value_t in temperature.items():
+            # Check if the star id is in both dictionaries
             if key_m == key_t:
+                # Plot data
                 try:
                     plt.scatter(value_t, value_m)
                 except ValueError:
                     if len(value_t) > 0 < len(value_m):
                         plt.scatter(value_t, value_m)
-
 
     plt.gca().invert_yaxis()
     plt.xlabel('Temperature')
@@ -146,9 +152,13 @@ def get_star_type(magnitude, temperature):
     pre_main_sequence = []
     giants = []
     white_dwarfs = []
-
-    for (key_m, value_m), (key_t, value_t) in zip(magnitude.items(), temperature.items()):
+    
+    # Iterate through each magnitude element and temperature element
+    for key_m, value_m in magnitude.items():
+        for key_t, value_t in temperature.items():
+            # Check if the star id is in both dictionaries
             if key_m == key_t:
+                # Restrictions relating to each star type
                 if 13 < value_m and value_t > 0.17:
                     pre_main_sequence.append(int(key_m))
                 elif 12 > value_m:
@@ -159,20 +169,14 @@ def get_star_type(magnitude, temperature):
                     main_sequence.append(int(key_m))
 
     type_dict['Main Sequence'] = main_sequence
-    type_dict['Pre-Main Sequence'] = pre_main_sequence
+    type_dict['Pre Main Sequence'] = pre_main_sequence
     type_dict['Giants'] =  giants
     type_dict['White Dwarfs'] = white_dwarfs
-
-    print "  Number of Main Sequence Stars:", len(main_sequence)
-    print "  Number of Pre Main Sequence Stars:", len(pre_main_sequence)
-    print "  Number of Giant Stars:", len(giants)
-    print "  Number of White Dwarf Stars:", len(white_dwarfs)
-
+    
     return type_dict
 
 
 # Question 2
-
 def plot_histogram(data, x_label, data_title):
     """
     Given a dataset, plots the data as a histogram, and saves it as a .png 
@@ -194,10 +198,10 @@ def plot_histogram(data, x_label, data_title):
     plt.xlabel(x_label)
     plt.ylabel('Frequency')
     plt.title(data_title)
-    #plt.text()
-    plt.grid(True)
-    plt.show(True)
+    plt.grid()
+    #plt.show()
     plt.savefig(data_title, format = 'png')
+    plt.clf()
     
 
 def histogram_stats(data):
@@ -211,7 +215,8 @@ def histogram_stats(data):
     Returns:
         The sample size, mean, and standard deviation of the dataset.
     """
-    if len(data) > 0 :
+    if len(data) > 0:
+        # Compute statistics
         sample_size = len(data)
         mean = np.mean(data)
         standard_dev = np.std(data)
@@ -220,12 +225,54 @@ def histogram_stats(data):
         print '\t' + 'Sample Size:', sample_size
         print '\t' + 'Sample Mean:', mean
         print '\t' + 'Sample Standard Deviation:', standard_dev
-
-        return standard_dev
-
+        
+    
+def plot_parameter_histogram(type_dict, column_dict, parameter_name):
+    """
+    Given a type dictionary and a parameter dictionary, plots a histogram of the 
+    parameter per type.
+    
+    Parameters:
+        type_dict: a dictionary in which the keys are strings corresponding to
+                   the types of stars, and the values are lists of star id 
+                   numbers.
+        
+        column_dict: a dictionary in which the keys are strings corresponding to
+                     a star's id number, and the values are floats corresponding
+                     to the parameter.
+        
+        parameter_name: a string representing the parameter being plotted.
+        
+    Returns:
+        a dictionary mapping star types to list of radii.
+    """
+    type_lst = []
+    # Iterate through each type, ensures the keys in the return dict are the 
+    # same as in type_dict
+    for star_type in type_dict.keys():
+        type_lst.append(star_type)
+        
+    type_to_dict = {}
+    
+    # Iterate through type_dict
+    for n, (name, star_id) in enumerate(type_dict.items()):
+        if name == type_lst[n]:
+            save = []
+            for key, value in column_dict.items():
+                # Create a list of parameter values
+                if int(key) in star_id:
+                    save.append(value)
+                    
+            type_to_dict[name] = save 
+             
+    # Plot a histogram for each star type
+    for star_type, parameter in type_to_dict.items():
+        plot_histogram(parameter, parameter_name, star_type)
+        
+    return type_to_dict
+    
 
 # Question 3
-
 def h_m_s_separator(coordinate):
     """
     Converts a coordinate of a star to a list of values.
@@ -240,18 +287,18 @@ def h_m_s_separator(coordinate):
     hour = 0
     minute = 0
     sec = 0
+    
+    # Iterate through each part of the coordinate
     for index, value in enumerate(coordinate):
-        # all kepler targets will be (+) declination: ignore '+' in first index
+        # All kepler targets will be (+) declination: ignore '+' in first index
         if value[0] == '+':
             value = value[1:]
 
-        # obtain the hour, minute, and second values based on index
+        # Obtain the hour, minute, and second values based on index
         if index < 3 and value != ' ':
             hour = str(hour) + str(value) if hour != 0 else value
-
         elif 3 <= index <= 5 and value != ' ':
             minute = str(minute) + str(value) if minute != 0 else value
-
         elif index > 5 and value != ' ':
             sec = str(sec) + str(value) if sec != 0 else value
 
@@ -330,7 +377,7 @@ def percent_list_in_list(list1, list2):
         The float representing the percentage of values in both lists
     """
     total = len(list2)
-
+    
     if len(list1) > 0 < len(list2):
         set1 = set(list1)
         set2 = set(list2)
@@ -361,7 +408,8 @@ def proximity_type_check(type_dict, ra, dec):
         area.
         """
     out_percents_dict = {}
-
+    
+    # Iterate through each coordinate pair
     for k,v in get_coordinates(ra, dec).items():
         near_stars_list = find_surrounding_stars(k, v, ra, dec)
         for startype, starlist in type_dict.items():
@@ -389,6 +437,7 @@ def proximity_type_histogram(data, type_dict):
     y= {}
     out = []
 
+    # iterate through the data and types
     for k,percents in data.items():
         for n, (t,kiclist) in enumerate(type_dict.items()):
             if int(k) in kiclist:
@@ -398,6 +447,7 @@ def proximity_type_histogram(data, type_dict):
                     stack = np.hstack((n, percents))
                     y[n] = stack
 
+    # plot the average of the data in a bar plot
     for index, values in y.items():
         average = sum(values) / len(y)
         plt.bar(index, average, width = 1, align = 'center', )
@@ -412,46 +462,63 @@ def proximity_type_histogram(data, type_dict):
     plt.autoscale(tight = False)
     plt.ylim(0, 1.0)
     #plt.show()
-
-    for n, j in enumerate(type_dict.keys()):
-            print '  ' + j, out[n]
-
     plt.savefig('Proximity_Type_histogram', format = 'png')
     plt.clf()
+    
+    return out
 
 
+# The code in this function is executed when this file is run as a Python program
 def main(test = True):
+    # A test file and our main file
+    path = "kepler_test50.txt" if test == True else "kepler_500.txt"
 
-    path = "kepler_test50.txt" if test == True else "kepler.txt"
-
-    star_data = read_csv(path)
-
-    # call variables
-    magnitude = get_column_data(star_data, "KEP Mag")
-    temperature = get_column_data(star_data, "E(B-V)")
-    ra = get_column_data(star_data, 'RA (J2000)')
-    dec = get_column_data(star_data, 'Dec (J2000)')
-    star_radii = get_column_data(star_data, "Radius")
+    # Get data from csv file
+    star_data = read_csv(path) 
 
     # Question 1:
-    print "Question 1:"
-    print "  Number of Stars per Type:"
-    color_magnitude_plot(magnitude, temperature)
+    magnitude = get_column_data(star_data, "KEP Mag")
+    temperature = get_column_data(star_data, "E(B-V)")
     types = get_star_type(magnitude, temperature)
+    print 'Question 1:'
+    color_magnitude_plot(magnitude, temperature)
+    
+    # Numerical results
+    print '  Number of Stars per Type:'
+    print '\t' + 'Number of Main Sequence Stars:', len(types['Main Sequence'])
+    print '\t' + 'Number of Pre Main Sequence Stars:', len(types['Pre Main Sequence'])
+    print '\t' + 'Number of Giant Stars:', len(types['Giants'])
+    print '\t' + 'Number of White Dwarf Stars:', len(types['White Dwarfs'])
 
-    # Question 2
+    print ' '
+    # Question 2:
+    star_radii = get_column_data(star_data, "Radius")
+    type_radius = plot_parameter_histogram(types, star_radii, 'Radius')
     print 'Question 2:'
-    print 'Stellar Radii per Type'
-    histogram_stats(star_radii.values())
-
-    # Question 3
+    
+    # Numerical results
+    print 'Main Sequence Radii:'
+    histogram_stats(type_radius['Main Sequence'])
+    print 'Pre Main Sequence Radii:'
+    histogram_stats(type_radius['Pre Main Sequence'])
+    print 'Giant Radii:'
+    histogram_stats(type_radius['Giants'])
+    print 'White Dwarf Radii:'
+    histogram_stats(type_radius['White Dwarfs'])
+    
+    print ' '
+    # Question 3:
+    ra = get_column_data(star_data, 'RA (J2000)')
+    dec = get_column_data(star_data, 'Dec (J2000)')
     print "Question 3:"
-    print "  Type of Stars in Proximity by Type:"
+    print "  Percentage of Stars in Proximity by Type:"
+    
     percentage = proximity_type_check(types, ra, dec)
+    output = proximity_type_histogram(percentage, types)
     histogram_stats(percentage.values())
-    proximity_type_histogram(percentage, types)
 
-
+    for n, i in enumerate(types.keys()):
+        print '\t' + str(i), output[n]
+        
 if __name__ == "__main__":
     main()
-    
